@@ -35,8 +35,8 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor clearColor];
         self.pictureFrame = picFrame;
-        self.minHeight = 50.0;
-        self.minWidth = 50.0;
+        self.minHeight = 60.0;
+        self.minWidth = 60.0;
         zooming = NO;
         [self setNeedsDisplay];
     }
@@ -230,6 +230,10 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
             break;
             
         default:
+        {
+            width = 0;
+            height = 0;
+        }
             break;
     }
     
@@ -254,12 +258,12 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
     CGContextClearRect(ctx, self.pictureFrame);
     
     // 红色框
-    [[UIColor redColor] setStroke];
+    [[UIColor whiteColor] setStroke];
     CGContextAddRect(ctx, self.pictureFrame);
     CGContextStrokePath(ctx);
     
     // 四个圆点
-    [[UIColor greenColor] set];
+    [[UIColor whiteColor] set];
     CGContextAddArc(ctx, cornerPoint.TopLeftPoint.x, cornerPoint.TopLeftPoint.y, 8.0, 0, 2*M_PI, 0);
     CGContextDrawPath(ctx, kCGPathFillStroke);
     

@@ -7,15 +7,13 @@
 //
 
 #import "ViewController.h"
-#import "YBPhotoCutView.h"
-#import "FirstViewController.h"
+#import "YBPictureCutterView.h"
 
-@interface ViewController ()<YBPhotoCutViewDelegate>
+@interface ViewController () <YBPictureCutterViewDataSource, YBPictureCutterViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UIImageView *imgView;
-@property (nonatomic, strong) UIImage *shotImage;
-@property (nonatomic, strong) YBPhotoCutView *customView;
-@property (nonatomic, assign) CGRect shotFrame;
+@property (nonatomic, strong) YBPictureCutterView *cutterView;
+@property (weak, nonatomic) IBOutlet UIImageView *tempImg;
 
 @end
 
@@ -24,39 +22,38 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.shotFrame = CGRectMake(50, 150, 275, 275);
-    
-    self.customView = [[YBPhotoCutView alloc] initWithFrame:self.imgView.frame pictureFrame:self.shotFrame];
-    self.customView.delegate = self;
-    self.customView.minWidth = 100;
-    self.customView.minHeight = 100;
-    [self.view addSubview:self.customView];
+    self.imgView.userInteractionEnabled = YES;
+    [self.imgView addSubview:self.cutterView];
     
 }
 
-#pragma mark - YBPhotoCutViewDelegate
-- (void)photoCutView:(YBPhotoCutView *)customView shotFrame:(CGRect)frame {
-    NSLog(@"%@",NSStringFromCGRect(frame));
-    self.shotFrame = frame;
+#pragma mark - pictureCutterView dataSource
+
+- (UIImage *)imageForPictureCutterView:(YBPictureCutterView *)cutterView {
+    return self.imgView.image;
 }
 
-- (IBAction)shoot:(id)sender {
-    // 按比例计算图片上的frame
-    CGFloat x = self.shotFrame.origin.x / self.imgView.frame.size.width * self.imgView.image.size.width;
-    CGFloat y = self.shotFrame.origin.y / self.imgView.frame.size.height * self.imgView.image.size.height;
-    CGFloat w = self.shotFrame.size.width / self.imgView.frame.size.width * self.imgView.image.size.width;
-    CGFloat h = self.shotFrame.size.height / self.imgView.frame.size.height * self.imgView.image.size.height;
-    
-    // 截图
-    CGRect cropRect = CGRectMake(x, y, w, h);
-    CGImageRef imageRef = CGImageCreateWithImageInRect([self.imgView.image CGImage], cropRect) ;
-    self.shotImage = [UIImage imageWithCGImage:imageRef];
-    CGImageRelease(imageRef);
-    
-    FirstViewController *vc = [[FirstViewController alloc] init];
-    vc.image = self.shotImage;
-    vc.imgFrame = self.shotFrame;
-    [self presentViewController:vc animated:YES completion:nil];
+- (void)pictureCutterView:(YBPictureCutterView *)cutterView didClippedImage:(UIImage *)image {
+    self.tempImg.image = image;
+    NSLog(@"%@", NSStringFromCGSize(image.size));
+}
+
+#pragma mark - actions
+
+- (IBAction)sureClick:(id)sender {
+    //
+}
+
+#pragma mark - getter
+
+- (YBPictureCutterView *)cutterView {
+    if (!_cutterView) {
+        _cutterView = [[YBPictureCutterView alloc] init];
+        _cutterView.frame = self.imgView.bounds;
+        _cutterView.dataSource = self;
+        _cutterView.delegate = self;
+    }
+    return _cutterView;
 }
 
 @end

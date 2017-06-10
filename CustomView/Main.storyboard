@@ -1,8 +1,13 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12118" systemVersion="16E195" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12086"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -19,47 +24,52 @@
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hp4-iK-kTT">
                                 <rect key="frame" x="0.0" y="612" width="375" height="55"/>
-                                <color key="backgroundColor" red="1" green="0.92883741360000005" blue="0.73102248560000005" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="backgroundColor" red="1" green="0.92883741360000005" blue="0.73102248560000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="55" id="U8E-zQ-emt"/>
+                                    <constraint firstAttribute="height" constant="55" id="MhP-Y8-HAn"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="20"/>
-                                <state key="normal" title="Shot">
-                                    <color key="titleColor" red="0.26946245670000002" green="0.71015748710000004" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <state key="normal" title="确认">
+                                    <color key="titleColor" red="0.26946245670000002" green="0.71015748710000004" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 </state>
                                 <connections>
-                                    <action selector="shoot:" destination="BYZ-38-t0r" eventType="touchUpInside" id="PqT-5e-JK4"/>
+                                    <action selector="sureClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="NTh-bx-RaJ"/>
                                 </connections>
                             </button>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="app.jpg" translatesAutoresizingMaskIntoConstraints="NO" id="jnS-ue-iyh">
-                                <rect key="frame" x="21" y="20" width="333" height="592"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="picture.jpg" translatesAutoresizingMaskIntoConstraints="NO" id="jnS-ue-iyh">
+                                <rect key="frame" x="0.0" y="64" width="375" height="210"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" secondItem="jnS-ue-iyh" secondAttribute="height" multiplier="9:16" id="Cfi-sf-Gvr"/>
+                                    <constraint firstAttribute="width" secondItem="jnS-ue-iyh" secondAttribute="height" multiplier="25:14" id="gsF-Lr-X77"/>
                                 </constraints>
                             </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="URt-Nb-4Og">
+                                <rect key="frame" x="67" y="379" width="240" height="128"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </imageView>
                         </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="hp4-iK-kTT" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="BU8-sE-7ak"/>
-                            <constraint firstItem="jnS-ue-iyh" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="20" id="Jmy-ap-8QJ"/>
-                            <constraint firstAttribute="trailing" secondItem="hp4-iK-kTT" secondAttribute="trailing" id="Qn7-sF-Wjz"/>
-                            <constraint firstItem="jnS-ue-iyh" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="gT6-zU-2Ru"/>
-                            <constraint firstItem="hp4-iK-kTT" firstAttribute="top" secondItem="jnS-ue-iyh" secondAttribute="bottom" id="rTe-B0-ex4"/>
-                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="hp4-iK-kTT" secondAttribute="bottom" id="uzy-uF-SKF"/>
+                            <constraint firstAttribute="trailing" secondItem="jnS-ue-iyh" secondAttribute="trailing" id="3IL-jf-aMf"/>
+                            <constraint firstAttribute="trailing" secondItem="hp4-iK-kTT" secondAttribute="trailing" id="BKc-1n-szJ"/>
+                            <constraint firstItem="jnS-ue-iyh" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="Ccn-Y9-9rk"/>
+                            <constraint firstItem="jnS-ue-iyh" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="64" id="c4h-J8-wok"/>
+                            <constraint firstItem="hp4-iK-kTT" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="k62-bN-dX3"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="hp4-iK-kTT" secondAttribute="bottom" id="qxd-Uf-uv0"/>
                         </constraints>
                     </view>
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
                     <size key="freeformSize" width="375" height="667"/>
                     <connections>
                         <outlet property="imgView" destination="jnS-ue-iyh" id="PJ1-3o-Ck5"/>
+                        <outlet property="tempImg" destination="URt-Nb-4Og" id="Uvk-Jh-2nZ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="462.5" y="422.5"/>
+            <point key="canvasLocation" x="461.60000000000002" y="422.33883058470769"/>
         </scene>
     </scenes>
     <resources>
-        <image name="app.jpg" width="640" height="1136"/>
+        <image name="picture.jpg" width="1920" height="1080"/>
     </resources>
 </document>

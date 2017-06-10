@@ -25,6 +25,15 @@
     self.imgView.userInteractionEnabled = YES;
     [self.imgView addSubview:self.cutterView];
     
+    UIView *v1 = [[UIView alloc] init];
+    v1.frame = CGRectMake(50, 290, 100, 50);
+    v1.backgroundColor = [UIColor redColor];
+    [self.view addSubview:v1];
+    
+    UIView *v2 = [[UIView alloc] init];
+    v2.frame = CGRectInset(v1.frame, -10, -10);
+    v2.backgroundColor = [UIColor greenColor];
+    [self.view addSubview:v2];
 }
 
 #pragma mark - pictureCutterView dataSource

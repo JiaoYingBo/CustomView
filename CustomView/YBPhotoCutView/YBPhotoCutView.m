@@ -9,46 +9,79 @@
 #import "YBPhotoCutView.h"
 
 // 四个角的触摸范围半径
-#define TouchRadius 20.0
-
-// 剪切框的四个角
+static CGFloat const touchRadius = 20.0;
+// 四个角
 typedef NS_ENUM(NSInteger,CornerIndex) {
     TopLeft = 0,
     TopRight,
     BottomLeft,
     BottomRight
 };
+// 四条边
+typedef NS_ENUM(NSUInteger, DirectionIndex) {
+    Top = 0,
+    Bottom,
+    Left,
+    Right
+};
 
 @implementation YBPhotoCutView {
     // 记录上次的触摸点以计算偏移量
-    CGPoint touchedPoint;
+    CGPoint _touchedPoint;
     // YES缩放模式（NO拖动模式）
-    BOOL zooming;
+    BOOL _zooming;
     // 拖动缩放的点
-    CornerIndex zoomingIndex;
+    CornerIndex _zoomingIndex;
+    // 拖动缩放的边
+    DirectionIndex _zoomingDirection;
     // 截图框四个角的坐标
-    CornerPoint cornerPoint;
+    CornerPoint _cornerPoint;
+    // 四条边中心点
+    DirectionPoint _directionPoint;
 }
 
-// picFrame:截图框的frame
 - (instancetype)initWithFrame:(CGRect)frame pictureFrame:(CGRect)picFrame {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor clearColor];
         self.pictureFrame = picFrame;
         _minHeight = 60.0;
         _minWidth = 60.0;
-        zooming = NO;
+        _zooming = NO;
+        _zoomingDirection = -1;
     }
     return self;
 }
 
 - (void)setPictureFrame:(CGRect)pictureFrame {
     _pictureFrame = pictureFrame;
-    cornerPoint = frameToCornerPoint(self.pictureFrame);
+    _cornerPoint = frameToCornerPoint(self.pictureFrame);
+    _directionPoint = cornerPointToDirection(_cornerPoint);
 }
 
 - (BOOL)beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
     CGPoint touchPoint = [touch locationInView:self];
+    
+    DirectionRect rect = directionPointToDirectionRect(_directionPoint, 30, 25);
+    if (CGRectContainsPoint(rect.topRect, touchPoint)) {
+        _zoomingDirection = Top;
+        _zooming = YES;
+        return YES;
+    }
+    if (CGRectContainsPoint(rect.bottomRect, touchPoint)) {
+        _zoomingDirection = Bottom;
+        _zooming = YES;
+        return YES;
+    }
+    if (CGRectContainsPoint(rect.leftRect, touchPoint)) {
+        _zoomingDirection = Left;
+        _zooming = YES;
+        return YES;
+    }
+    if (CGRectContainsPoint(rect.rightRect, touchPoint)) {
+        _zoomingDirection = Right;
+        _zooming = YES;
+        return YES;
+    }
     
     // 遍历四个角的坐标，判断是否点击的是四个角
     for (NSInteger i = 0; i < 4; i ++) {
@@ -58,17 +91,17 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
         // 如果在四个角为圆心的圆周内
         if ([self touchInCircleWithPoint:touchPoint circleCenter:CGPointMake(roundX, roundY)]) {
             // 缩放模式
-            zooming = YES;
+            _zooming = YES;
             // 记录所点的角
-            zoomingIndex = i;
-            touchedPoint = touchPoint;
+            _zoomingIndex = i;
+            _touchedPoint = touchPoint;
             
             return YES;
         }
     }
     if (CGRectContainsPoint(self.pictureFrame, touchPoint)) {
         // 拖动模式
-        touchedPoint = touchPoint;
+        _touchedPoint = touchPoint;
         return YES;
     } else {
         return NO;
@@ -78,7 +111,7 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
 - (BOOL)continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
     CGPoint touchPoint = [touch locationInView:self];
     
-    if (zooming) {
+    if (_zooming) {
         // 让剪切框不超过self.bounds的范围
         if (touchPoint.x < 0) {
             touchPoint.x = 0;
@@ -92,38 +125,58 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
         if (touchPoint.y > CGRectGetMaxY(self.bounds)) {
             touchPoint.y = CGRectGetMaxY(self.bounds);
         }
+        // 四条边缩放
+        CGRect preFrame = self.pictureFrame;
+        if (_zoomingDirection == Top) {
+            self.pictureFrame = CGRectMake(preFrame.origin.x, touchPoint.y, preFrame.size.width, preFrame.origin.y-touchPoint.y+preFrame.size.height);
+            [self setNeedsDisplay];
+            return YES;
+        } else if (_zoomingDirection == Bottom) {
+            self.pictureFrame = CGRectMake(preFrame.origin.x, preFrame.origin.y, preFrame.size.width, preFrame.size.height-(preFrame.origin.y+preFrame.size.height-touchPoint.y));
+            [self setNeedsDisplay];
+            return YES;
+        } else if (_zoomingDirection == Left) {
+            self.pictureFrame = CGRectMake(touchPoint.x, preFrame.origin.y, preFrame.origin.x-touchPoint.x+preFrame.size.width, preFrame.size.height);
+            [self setNeedsDisplay];
+            return YES;
+        } else if (_zoomingDirection == Right) {
+            self.pictureFrame = CGRectMake(preFrame.origin.x, preFrame.origin.y, preFrame.size.width-(preFrame.origin.x+preFrame.size.width-touchPoint.x), preFrame.size.height);
+            [self setNeedsDisplay];
+            return YES;
+        }
+        // 四个角缩放
         CGPoint staticPoint;
-        switch (zoomingIndex) {
+        switch (_zoomingIndex) {
             case TopLeft:
             {
-                staticPoint = cornerPoint.BottomRightPoint;
+                staticPoint = _cornerPoint.bottomRightPoint;
             }
                 break;
             case TopRight:
             {
-                staticPoint = cornerPoint.BottomLeftPoint;
+                staticPoint = _cornerPoint.bottomLeftPoint;
             }
                 break;
             case BottomLeft:
             {
-                staticPoint = cornerPoint.TopRightPoint;
+                staticPoint = _cornerPoint.topRightPoint;
             }
                 break;
             case BottomRight:
             {
-                staticPoint = cornerPoint.TopLeftPoint;
+                staticPoint = _cornerPoint.topLeftPoint;
             }
                 break;
                 
             default:
                 break;
         }
-        self.pictureFrame = [self pointToFrame:touchPoint staticPoint:staticPoint zoomingIndex:zoomingIndex];
+        self.pictureFrame = [self pointToFrame:touchPoint staticPoint:staticPoint zoomingIndex:_zoomingIndex];
         
     } else {
         // X和Y方向上的偏移量
-        CGFloat moveX = touchPoint.x - touchedPoint.x;
-        CGFloat moveY = touchPoint.y - touchedPoint.y;
+        CGFloat moveX = touchPoint.x - _touchedPoint.x;
+        CGFloat moveY = touchPoint.y - _touchedPoint.y;
         
         CGRect rect = self.pictureFrame;
         rect.origin.x += moveX;
@@ -145,7 +198,7 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
         self.pictureFrame = rect;
     }
     
-    touchedPoint = touchPoint;
+    _touchedPoint = touchPoint;
     [self setNeedsDisplay];
     
     return YES;
@@ -157,8 +210,16 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
         [self.delegate photoCutView:self shotFrame:self.pictureFrame];
     }
     // 还原数据
-    touchedPoint = CGPointZero;
-    zooming = NO;
+    _touchedPoint = CGPointZero;
+    _zooming = NO;
+    _zoomingDirection = -1;
+}
+
+- (void)cancelTrackingWithEvent:(UIEvent *)event {
+    // 还原数据
+    _touchedPoint = CGPointZero;
+    _zooming = NO;
+    _zoomingDirection = -1;
 }
 
 // 根据矩形的两个对角点，计算这个矩形的frame
@@ -241,10 +302,10 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
     return rect;
 }
 
-// 判断touchPoint是否在以circleCenter为圆心、半径为TouchRadius的圆内
+// 判断touchPoint是否在以circleCenter为圆心、半径为touchRadius的圆内
 - (BOOL)touchInCircleWithPoint:(CGPoint)touchPoint circleCenter:(CGPoint)circleCenter{
     YBPolarCoordinate polar = decartToPolar(circleCenter, touchPoint);
-    if(polar.radius >= TouchRadius) return NO;
+    if(polar.radius >= touchRadius) return NO;
     else return YES;
 }
 
@@ -266,39 +327,76 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
     
     [[UIColor whiteColor] setFill];
     // 左上
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopLeftPoint.x-edge_3, cornerPoint.TopLeftPoint.y-edge_3, edge_20, edge_3));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.topLeftPoint.x-edge_3, _cornerPoint.topLeftPoint.y-edge_3, edge_20, edge_3));
     CGContextFillPath(ctx);
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopLeftPoint.x-edge_3, cornerPoint.TopLeftPoint.y-edge_3, edge_3, edge_20));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.topLeftPoint.x-edge_3, _cornerPoint.topLeftPoint.y-edge_3, edge_3, edge_20));
     CGContextFillPath(ctx);
     // 左下
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.BottomLeftPoint.x-edge_3, cornerPoint.BottomLeftPoint.y, edge_20, edge_3));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.bottomLeftPoint.x-edge_3, _cornerPoint.bottomLeftPoint.y, edge_20, edge_3));
     CGContextFillPath(ctx);
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.BottomLeftPoint.x-edge_3, cornerPoint.BottomLeftPoint.y-edge_20+edge_3, edge_3, edge_20));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.bottomLeftPoint.x-edge_3, _cornerPoint.bottomLeftPoint.y-edge_20+edge_3, edge_3, edge_20));
     CGContextFillPath(ctx);
     // 右上
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-edge_20+edge_3, cornerPoint.TopRightPoint.y-edge_3, edge_20, edge_3));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.topRightPoint.x-edge_20+edge_3, _cornerPoint.topRightPoint.y-edge_3, edge_20, edge_3));
     CGContextFillPath(ctx);
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x, cornerPoint.TopRightPoint.y-edge_3, edge_3, edge_20));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.topRightPoint.x, _cornerPoint.topRightPoint.y-edge_3, edge_3, edge_20));
     CGContextFillPath(ctx);
     // 右下
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-edge_20+edge_3, cornerPoint.BottomRightPoint.y, edge_20, edge_3));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.topRightPoint.x-edge_20+edge_3, _cornerPoint.bottomRightPoint.y, edge_20, edge_3));
     CGContextFillPath(ctx);
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.BottomRightPoint.x, cornerPoint.BottomRightPoint.y-edge_20+edge_3, edge_3, edge_20));
+    CGContextAddRect(ctx, CGRectMake(_cornerPoint.bottomRightPoint.x, _cornerPoint.bottomRightPoint.y-edge_20+edge_3, edge_3, edge_20));
     CGContextFillPath(ctx);
     
     CGFloat direction_30 = 30;
+    DirectionRect frame = directionPointToDirectionRect(_directionPoint, direction_30, edge_3);
     // 上
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-(cornerPoint.TopRightPoint.x-cornerPoint.TopLeftPoint.x)/2-direction_30/2, cornerPoint.TopLeftPoint.y-edge_3, direction_30, edge_3));
+    CGContextAddRect(ctx, frame.topRect);
     CGContextFillPath(ctx);
     // 下
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-(cornerPoint.TopRightPoint.x-cornerPoint.TopLeftPoint.x)/2-direction_30/2, cornerPoint.BottomLeftPoint.y, direction_30, edge_3));
+    CGContextAddRect(ctx, frame.bottomRect);
     CGContextFillPath(ctx);
     // 左
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopLeftPoint.x-edge_3, cornerPoint.BottomLeftPoint.y-(cornerPoint.BottomLeftPoint.y-cornerPoint.TopLeftPoint.y)/2-direction_30/2, edge_3, direction_30));
+    CGContextAddRect(ctx, frame.leftRect);
     CGContextFillPath(ctx);
     // 右
-    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x, cornerPoint.BottomRightPoint.y-(cornerPoint.BottomRightPoint.y-cornerPoint.TopRightPoint.y)/2-direction_30/2, edge_3, direction_30));
+    CGContextAddRect(ctx, frame.rightRect);
     CGContextFillPath(ctx);
+//    // 上
+//    CGContextAddRect(ctx, CGRectMake(_directionPoint.top.x-direction_30/2, _directionPoint.top.y-edge_3, direction_30, edge_3));
+//    CGContextFillPath(ctx);
+//    // 下
+//    CGContextAddRect(ctx, CGRectMake(_directionPoint.bottom.x-direction_30/2, _directionPoint.bottom.y, direction_30, edge_3));
+//    CGContextFillPath(ctx);
+//    // 左
+//    CGContextAddRect(ctx, CGRectMake(_directionPoint.left.x-edge_3, _directionPoint.left.y-direction_30/2, edge_3, direction_30));
+//    CGContextFillPath(ctx);
+//    // 右
+//    CGContextAddRect(ctx, CGRectMake(_directionPoint.right.x, _directionPoint.right.y-direction_30/2, edge_3, direction_30));
+//    CGContextFillPath(ctx);
+    
+    CGFloat height_1 = 1/[UIScreen mainScreen].scale;
+    // 横一
+    CGContextAddRect(ctx, CGRectMake((int)_cornerPoint.topLeftPoint.x, (int)(_cornerPoint.bottomLeftPoint.y-(_cornerPoint.bottomLeftPoint.y-_cornerPoint.topLeftPoint.y)/3*2), _cornerPoint.topRightPoint.x-_cornerPoint.topLeftPoint.x, height_1));
+    CGContextFillPath(ctx);
+    // 横二
+    CGContextAddRect(ctx, CGRectMake((int)_cornerPoint.topLeftPoint.x, (int)(_cornerPoint.bottomLeftPoint.y-(_cornerPoint.bottomLeftPoint.y-_cornerPoint.topLeftPoint.y)/3), _cornerPoint.topRightPoint.x-_cornerPoint.topLeftPoint.x, height_1));
+    CGContextFillPath(ctx);
+    // 竖一
+    CGContextAddRect(ctx, CGRectMake((int)(_cornerPoint.topRightPoint.x-(_cornerPoint.topRightPoint.x-_cornerPoint.topLeftPoint.x)/3*2), (int)_cornerPoint.topRightPoint.y, height_1, _cornerPoint.bottomLeftPoint.y-_cornerPoint.topLeftPoint.y));
+    CGContextFillPath(ctx);
+    // 竖二
+    CGContextAddRect(ctx, CGRectMake((int)(_cornerPoint.topRightPoint.x-(_cornerPoint.topRightPoint.x-_cornerPoint.topLeftPoint.x)/3), (int)_cornerPoint.topRightPoint.y, height_1, _cornerPoint.bottomLeftPoint.y-_cornerPoint.topLeftPoint.y));
+    CGContextFillPath(ctx);
+    
+//    [[UIColor redColor] set];
+//    CGContextAddArc(ctx, _directionPoint.top.x, _directionPoint.top.y, 8.0, 0, 2*M_PI, 0);
+//    CGContextDrawPath(ctx, kCGPathFillStroke);
+//    CGContextAddArc(ctx, _directionPoint.bottom.x, _directionPoint.bottom.y, 8.0, 0, 2*M_PI, 0);
+//    CGContextDrawPath(ctx, kCGPathFillStroke);
+//    CGContextAddArc(ctx, _directionPoint.left.x, _directionPoint.left.y, 8.0, 0, 2*M_PI, 0);
+//    CGContextDrawPath(ctx, kCGPathFillStroke);
+//    CGContextAddArc(ctx, _directionPoint.right.x, _directionPoint.right.y, 8.0, 0, 2*M_PI, 0);
+//    CGContextDrawPath(ctx, kCGPathFillStroke);
 }
 
 @end
@@ -322,12 +420,42 @@ YBPolarCoordinate decartToPolar(CGPoint center, CGPoint point){
 CornerPoint frameToCornerPoint(CGRect frame) {
     CornerPoint corner;
     
-    corner.TopLeftPoint = frame.origin;
-    corner.TopRightPoint = CGPointMake(frame.origin.x+frame.size.width, frame.origin.y);
-    corner.BottomLeftPoint = CGPointMake(frame.origin.x, frame.origin.y+frame.size.height);
-    corner.BottomRightPoint = CGPointMake(frame.origin.x+frame.size.width, frame.origin.y+frame.size.height);
+    corner.topLeftPoint = frame.origin;
+    corner.topRightPoint = CGPointMake(frame.origin.x+frame.size.width, frame.origin.y);
+    corner.bottomLeftPoint = CGPointMake(frame.origin.x, frame.origin.y+frame.size.height);
+    corner.bottomRightPoint = CGPointMake(frame.origin.x+frame.size.width, frame.origin.y+frame.size.height);
+
+//    corner.topLeftPoint = CGPointMake((int)frame.origin.x, (int)frame.origin.y);
+//    corner.topRightPoint = CGPointMake((int)(frame.origin.x+frame.size.width), (int)frame.origin.y);
+//    corner.bottomLeftPoint = CGPointMake((int)frame.origin.x, (int)(frame.origin.y+frame.size.height));
+//    corner.bottomRightPoint = CGPointMake((int)(frame.origin.x+frame.size.width), (int)(frame.origin.y+frame.size.height));
     
     return corner;
+}
+
+DirectionPoint cornerPointToDirection(CornerPoint corner) {
+    DirectionPoint direction;
+    
+    direction.top = CGPointMake(corner.topRightPoint.x-(corner.topRightPoint.x-corner.topLeftPoint.x)/2, corner.topRightPoint.y);
+    direction.bottom = CGPointMake(corner.topRightPoint.x-(corner.topRightPoint.x-corner.topLeftPoint.x)/2, corner.bottomRightPoint.y);
+    direction.left = CGPointMake(corner.topLeftPoint.x, corner.bottomLeftPoint.y-(corner.bottomLeftPoint.y-corner.topLeftPoint.y)/2);
+    direction.right = CGPointMake(corner.topRightPoint.x, corner.bottomLeftPoint.y-(corner.bottomLeftPoint.y-corner.topLeftPoint.y)/2);
+    
+    return direction;
+}
+
+// 宽高是水平方向的，如果是竖直方向则宽高反过来
+DirectionRect directionPointToDirectionRect(DirectionPoint drt_point, CGFloat width, CGFloat height) {
+    DirectionRect rect;
+//    CGFloat width = 40;
+//    CGFloat height = 30;
+    
+    rect.topRect = CGRectMake(drt_point.top.x-width/2, drt_point.top.y-height, width, height);
+    rect.bottomRect = CGRectMake(drt_point.bottom.x-width/2, drt_point.bottom.y, width, height);
+    rect.leftRect = CGRectMake(drt_point.left.x-height, drt_point.left.y-width/2, height, width);
+    rect.rightRect = CGRectMake(drt_point.right.x, drt_point.right.y-width/2, height, width);
+    
+    return rect;
 }
 
 @end

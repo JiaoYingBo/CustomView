@@ -19,7 +19,7 @@
 
 @property (nonatomic, assign) id<YBPhotoCutViewDelegate> delegate;
 // 剪切框的frame
-@property (nonatomic, assign) CGRect pictureFrame;
+@property (nonatomic, assign, readonly) CGRect pictureFrame;
 @property (nonatomic, assign) CGFloat minWidth;
 @property (nonatomic, assign) CGFloat minHeight;
 

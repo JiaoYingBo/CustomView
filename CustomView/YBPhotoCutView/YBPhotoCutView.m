@@ -8,8 +8,8 @@
 
 #import "YBPhotoCutView.h"
 
-// 四个角的触摸范围直径
-#define TouchRadius 40.0
+// 四个角的触摸范围半径
+#define TouchRadius 20.0
 
 // 剪切框的四个角
 typedef NS_ENUM(NSInteger,CornerIndex) {
@@ -35,10 +35,9 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor clearColor];
         self.pictureFrame = picFrame;
-        self.minHeight = 60.0;
-        self.minWidth = 60.0;
+        _minHeight = 60.0;
+        _minWidth = 60.0;
         zooming = NO;
-        [self setNeedsDisplay];
     }
     return self;
 }
@@ -242,7 +241,7 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
     return rect;
 }
 
-// 判断touchPoint是否在以circleCenter为圆心、半径为20的圆内
+// 判断touchPoint是否在以circleCenter为圆心、半径为TouchRadius的圆内
 - (BOOL)touchInCircleWithPoint:(CGPoint)touchPoint circleCenter:(CGPoint)circleCenter{
     YBPolarCoordinate polar = decartToPolar(circleCenter, touchPoint);
     if(polar.radius >= TouchRadius) return NO;
@@ -252,29 +251,54 @@ typedef NS_ENUM(NSInteger,CornerIndex) {
 - (void)drawRect:(CGRect)rect {
     CGContextRef ctx = UIGraphicsGetCurrentContext();
     
-    // 黑色半透明底色和透明截图框
+    // 蒙版层
     [[UIColor colorWithWhite:0.0 alpha:0.5] setFill];
     CGContextFillRect(ctx, self.bounds);
     CGContextClearRect(ctx, self.pictureFrame);
     
-    // 红色框
+    // 矩形框
     [[UIColor whiteColor] setStroke];
     CGContextAddRect(ctx, self.pictureFrame);
     CGContextStrokePath(ctx);
     
-    // 四个圆点
-    [[UIColor whiteColor] set];
-    CGContextAddArc(ctx, cornerPoint.TopLeftPoint.x, cornerPoint.TopLeftPoint.y, 8.0, 0, 2*M_PI, 0);
-    CGContextDrawPath(ctx, kCGPathFillStroke);
+    CGFloat edge_3 = 3;
+    CGFloat edge_20 = 20;
     
-    CGContextAddArc(ctx, cornerPoint.TopRightPoint.x, cornerPoint.TopRightPoint.y, 8.0, 0, 2*M_PI, 0);
-    CGContextDrawPath(ctx, kCGPathFillStroke);
+    [[UIColor whiteColor] setFill];
+    // 左上
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopLeftPoint.x-edge_3, cornerPoint.TopLeftPoint.y-edge_3, edge_20, edge_3));
+    CGContextFillPath(ctx);
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopLeftPoint.x-edge_3, cornerPoint.TopLeftPoint.y-edge_3, edge_3, edge_20));
+    CGContextFillPath(ctx);
+    // 左下
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.BottomLeftPoint.x-edge_3, cornerPoint.BottomLeftPoint.y, edge_20, edge_3));
+    CGContextFillPath(ctx);
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.BottomLeftPoint.x-edge_3, cornerPoint.BottomLeftPoint.y-edge_20+edge_3, edge_3, edge_20));
+    CGContextFillPath(ctx);
+    // 右上
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-edge_20+edge_3, cornerPoint.TopRightPoint.y-edge_3, edge_20, edge_3));
+    CGContextFillPath(ctx);
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x, cornerPoint.TopRightPoint.y-edge_3, edge_3, edge_20));
+    CGContextFillPath(ctx);
+    // 右下
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-edge_20+edge_3, cornerPoint.BottomRightPoint.y, edge_20, edge_3));
+    CGContextFillPath(ctx);
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.BottomRightPoint.x, cornerPoint.BottomRightPoint.y-edge_20+edge_3, edge_3, edge_20));
+    CGContextFillPath(ctx);
     
-    CGContextAddArc(ctx, cornerPoint.BottomLeftPoint.x, cornerPoint.BottomLeftPoint.y, 8.0, 0, 2*M_PI, 0);
-    CGContextDrawPath(ctx, kCGPathFillStroke);
-    
-    CGContextAddArc(ctx, cornerPoint.BottomRightPoint.x, cornerPoint.BottomRightPoint.y, 8.0, 0, 2*M_PI, 0);
-    CGContextDrawPath(ctx, kCGPathFillStroke);
+    CGFloat direction_30 = 30;
+    // 上
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-(cornerPoint.TopRightPoint.x-cornerPoint.TopLeftPoint.x)/2-direction_30/2, cornerPoint.TopLeftPoint.y-edge_3, direction_30, edge_3));
+    CGContextFillPath(ctx);
+    // 下
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x-(cornerPoint.TopRightPoint.x-cornerPoint.TopLeftPoint.x)/2-direction_30/2, cornerPoint.BottomLeftPoint.y, direction_30, edge_3));
+    CGContextFillPath(ctx);
+    // 左
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopLeftPoint.x-edge_3, cornerPoint.BottomLeftPoint.y-(cornerPoint.BottomLeftPoint.y-cornerPoint.TopLeftPoint.y)/2-direction_30/2, edge_3, direction_30));
+    CGContextFillPath(ctx);
+    // 右
+    CGContextAddRect(ctx, CGRectMake(cornerPoint.TopRightPoint.x, cornerPoint.BottomRightPoint.y-(cornerPoint.BottomRightPoint.y-cornerPoint.TopRightPoint.y)/2-direction_30/2, edge_3, direction_30));
+    CGContextFillPath(ctx);
 }
 
 @end

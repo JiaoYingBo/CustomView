@@ -12,8 +12,8 @@
 @interface ViewController () <YBPictureCutterViewDataSource, YBPictureCutterViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UIImageView *imgView;
-@property (nonatomic, strong) YBPictureCutterView *cutterView;
 @property (weak, nonatomic) IBOutlet UIImageView *tempImg;
+@property (nonatomic, strong) YBPictureCutterView *cutterView;
 
 @end
 
@@ -26,7 +26,7 @@
     [self.imgView addSubview:self.cutterView];
 }
 
-#pragma mark - pictureCutterView dataSource
+#pragma mark - pictureCutterView dataSource & delegate
 
 - (UIImage *)imageForPictureCutterView:(YBPictureCutterView *)cutterView {
     return self.imgView.image;

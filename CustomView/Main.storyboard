@@ -23,21 +23,34 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="picture.jpg" translatesAutoresizingMaskIntoConstraints="NO" id="jnS-ue-iyh">
-                                <rect key="frame" x="0.0" y="64" width="375" height="210"/>
+                                <rect key="frame" x="20" y="64" width="335" height="188"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="jnS-ue-iyh" secondAttribute="height" multiplier="25:14" id="gsF-Lr-X77"/>
                                 </constraints>
                             </imageView>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="URt-Nb-4Og">
-                                <rect key="frame" x="67" y="379" width="240" height="128"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="URt-Nb-4Og">
+                                <rect key="frame" x="67" y="381" width="240" height="128"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="128" id="Hik-s1-fdq"/>
+                                    <constraint firstAttribute="width" constant="240" id="YOx-6d-qou"/>
+                                </constraints>
                             </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="截图" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bsD-jv-5Ox">
+                                <rect key="frame" x="170" y="350" width="35" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <constraints>
-                            <constraint firstAttribute="trailing" secondItem="jnS-ue-iyh" secondAttribute="trailing" id="3IL-jf-aMf"/>
-                            <constraint firstItem="jnS-ue-iyh" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="Ccn-Y9-9rk"/>
+                            <constraint firstAttribute="trailing" secondItem="jnS-ue-iyh" secondAttribute="trailing" constant="20" id="3IL-jf-aMf"/>
+                            <constraint firstItem="URt-Nb-4Og" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="AG2-JC-5cl"/>
+                            <constraint firstItem="jnS-ue-iyh" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="20" id="Ccn-Y9-9rk"/>
                             <constraint firstItem="jnS-ue-iyh" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="64" id="c4h-J8-wok"/>
+                            <constraint firstItem="bsD-jv-5Ox" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="i18-VS-v7i"/>
+                            <constraint firstItem="bsD-jv-5Ox" firstAttribute="top" secondItem="jnS-ue-iyh" secondAttribute="bottom" constant="98" id="jmV-iY-YiV"/>
+                            <constraint firstItem="URt-Nb-4Og" firstAttribute="top" secondItem="bsD-jv-5Ox" secondAttribute="bottom" constant="10" id="v1e-jj-XxM"/>
                         </constraints>
                     </view>
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>

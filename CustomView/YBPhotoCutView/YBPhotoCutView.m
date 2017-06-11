@@ -96,14 +96,12 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
             _zooming = YES;
             // 记录所点的角
             _zoomingIndex = i;
-//            _touchedPoint = touchPoint;
             
             return YES;
         }
     }
     if (CGRectContainsPoint(self.pictureFrame, touchPoint)) {
         // 拖动模式
-//        _touchedPoint = touchPoint;
         return YES;
     }
     return NO;
@@ -197,7 +195,6 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
             default:
                 break;
         }
-//        self.pictureFrame = [self pointToFrame:touchPoint diagonalPoint:diagonalPoint zoomingIndex:_zoomingIndex];
         self.pictureFrame = [self pointToFrame:touchPoint cornerPoint:cornerPoint diagonalPoint:diagonalPoint zoomingIndex:_zoomingIndex];
         
     } else {
@@ -249,6 +246,7 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
     _zoomingDirection = -1;
 }
 
+// 根据触摸点，计算这个矩形的frame
 - (CGRect)pointToFrame:(CGPoint)touching cornerPoint:(CGPoint)corner diagonalPoint:(CGPoint)diagonalPoint zoomingIndex:(CornerIndex)index {
     CGFloat width,height;
     CGPoint origin;
@@ -331,89 +329,6 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
     return rect;
 }
 
-// 根据矩形的两个对角点，计算这个矩形的frame
-- (CGRect)pointToFrame:(CGPoint)touching diagonalPoint:(CGPoint)diagonalPoint zoomingIndex:(CornerIndex)index {
-    CGFloat width,height;
-    CGPoint origin;
-    
-    switch (index) {
-        case TopLeft:
-        {
-            CGFloat offsetX = touching.x - _touchedPoint.x;
-            CGFloat offsetY = touching.y - _touchedPoint.y;
-            NSLog(@"%.2f  %.2f",offsetX,offsetY);
-            origin = touching;
-            width = diagonalPoint.x-touching.x;
-            height = diagonalPoint.y-touching.y;
-            if (width < self.minWidth) {
-                width = self.minWidth;
-                origin.x = diagonalPoint.x-self.minWidth;
-            }
-            if (height < self.minHeight) {
-                height = self.minHeight;
-                origin.y = diagonalPoint.y-self.minHeight;
-            }
-        }
-            break;
-        case TopRight:
-        {
-            origin = CGPointMake(diagonalPoint.x, touching.y);
-            width = touching.x-diagonalPoint.x;
-            height = diagonalPoint.y-touching.y;
-            if (width < self.minWidth) {
-                width = self.minWidth;
-                origin.x = diagonalPoint.x;
-            }
-            if (height < self.minHeight) {
-                height = self.minHeight;
-                origin.y = diagonalPoint.y-self.minHeight;
-            }
-        }
-            break;
-        case BottomLeft:
-        {
-            origin = CGPointMake(touching.x, diagonalPoint.y);
-            width = diagonalPoint.x-touching.x;
-            height = touching.y-diagonalPoint.y;
-            if (width < self.minWidth) {
-                width = self.minWidth;
-                origin.x = diagonalPoint.x-self.minWidth;
-            }
-            if (height < self.minHeight) {
-                height = self.minHeight;
-                origin.y = diagonalPoint.y;
-            }
-        }
-            break;
-        case BottomRight:
-        {
-            origin = diagonalPoint;
-            width = touching.x-diagonalPoint.x;
-            height = touching.y-diagonalPoint.y;
-            if (width < self.minWidth) {
-                width = self.minWidth;
-                origin.x = diagonalPoint.x;
-            }
-            if (height < self.minHeight) {
-                height = self.minHeight;
-                origin.y = diagonalPoint.y;
-            }
-        }
-            break;
-            
-        default:
-        {
-            width = 0;
-            height = 0;
-        }
-            break;
-    }
-    
-    CGRect rect = CGRectMake(origin.x, origin.y, width, height);
-    
-    return rect;
-}
-
 // 判断touchPoint是否在以circleCenter为圆心、半径为touchRadius的圆内
 - (BOOL)touchInCircleWithPoint:(CGPoint)touchPoint circleCenter:(CGPoint)circleCenter{
     YBPolarCoordinate polar = decartToPolar(circleCenter, touchPoint);
@@ -425,7 +340,7 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
     CGContextRef ctx = UIGraphicsGetCurrentContext();
     
     // 蒙版层
-    [[UIColor colorWithWhite:0.0 alpha:0.5] setFill];
+    [[UIColor colorWithWhite:0.0 alpha:0.3] setFill];
     CGContextFillRect(ctx, self.bounds);
     CGContextClearRect(ctx, self.pictureFrame);
     
@@ -473,18 +388,6 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
     // 右
     CGContextAddRect(ctx, frame.rightRect);
     CGContextFillPath(ctx);
-//    // 上
-//    CGContextAddRect(ctx, CGRectMake(_directionPoint.top.x-direction_30/2, _directionPoint.top.y-edge_3, direction_30, edge_3));
-//    CGContextFillPath(ctx);
-//    // 下
-//    CGContextAddRect(ctx, CGRectMake(_directionPoint.bottom.x-direction_30/2, _directionPoint.bottom.y, direction_30, edge_3));
-//    CGContextFillPath(ctx);
-//    // 左
-//    CGContextAddRect(ctx, CGRectMake(_directionPoint.left.x-edge_3, _directionPoint.left.y-direction_30/2, edge_3, direction_30));
-//    CGContextFillPath(ctx);
-//    // 右
-//    CGContextAddRect(ctx, CGRectMake(_directionPoint.right.x, _directionPoint.right.y-direction_30/2, edge_3, direction_30));
-//    CGContextFillPath(ctx);
     
     CGFloat height_1 = 1/[UIScreen mainScreen].scale;
     // 横一
@@ -499,16 +402,6 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
     // 竖二
     CGContextAddRect(ctx, CGRectMake((int)(_cornerPoint.topRightPoint.x-(_cornerPoint.topRightPoint.x-_cornerPoint.topLeftPoint.x)/3), (int)_cornerPoint.topRightPoint.y, height_1, _cornerPoint.bottomLeftPoint.y-_cornerPoint.topLeftPoint.y));
     CGContextFillPath(ctx);
-    
-//    [[UIColor redColor] set];
-//    CGContextAddArc(ctx, _directionPoint.top.x, _directionPoint.top.y, 8.0, 0, 2*M_PI, 0);
-//    CGContextDrawPath(ctx, kCGPathFillStroke);
-//    CGContextAddArc(ctx, _directionPoint.bottom.x, _directionPoint.bottom.y, 8.0, 0, 2*M_PI, 0);
-//    CGContextDrawPath(ctx, kCGPathFillStroke);
-//    CGContextAddArc(ctx, _directionPoint.left.x, _directionPoint.left.y, 8.0, 0, 2*M_PI, 0);
-//    CGContextDrawPath(ctx, kCGPathFillStroke);
-//    CGContextAddArc(ctx, _directionPoint.right.x, _directionPoint.right.y, 8.0, 0, 2*M_PI, 0);
-//    CGContextDrawPath(ctx, kCGPathFillStroke);
 }
 
 @end
@@ -536,11 +429,6 @@ CornerPoint frameToCornerPoint(CGRect frame) {
     corner.topRightPoint = CGPointMake(frame.origin.x+frame.size.width, frame.origin.y);
     corner.bottomLeftPoint = CGPointMake(frame.origin.x, frame.origin.y+frame.size.height);
     corner.bottomRightPoint = CGPointMake(frame.origin.x+frame.size.width, frame.origin.y+frame.size.height);
-
-//    corner.topLeftPoint = CGPointMake((int)frame.origin.x, (int)frame.origin.y);
-//    corner.topRightPoint = CGPointMake((int)(frame.origin.x+frame.size.width), (int)frame.origin.y);
-//    corner.bottomLeftPoint = CGPointMake((int)frame.origin.x, (int)(frame.origin.y+frame.size.height));
-//    corner.bottomRightPoint = CGPointMake((int)(frame.origin.x+frame.size.width), (int)(frame.origin.y+frame.size.height));
     
     return corner;
 }
@@ -559,8 +447,6 @@ DirectionPoint cornerPointToDirection(CornerPoint corner) {
 // 宽高是水平方向的，如果是竖直方向则宽高反过来
 DirectionRect directionPointToDirectionRect(DirectionPoint drt_point, CGFloat width, CGFloat height) {
     DirectionRect rect;
-//    CGFloat width = 40;
-//    CGFloat height = 30;
     
     rect.topRect = CGRectMake(drt_point.top.x-width/2, drt_point.top.y-height, width, height);
     rect.bottomRect = CGRectMake(drt_point.bottom.x-width/2, drt_point.bottom.y, width, height);

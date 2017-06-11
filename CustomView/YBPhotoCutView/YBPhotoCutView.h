@@ -11,6 +11,8 @@
 @class YBPhotoCutView;
 @protocol YBPhotoCutViewDelegate <NSObject>
 
+@optional
+// 返回裁剪框frame
 - (void)photoCutView:(YBPhotoCutView *)customView shotFrame:(CGRect)frame;
 
 @end

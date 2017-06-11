@@ -60,7 +60,9 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
 
 - (BOOL)beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
     CGPoint touchPoint = [touch locationInView:self];
+    _touchedPoint = touchPoint;
     
+    // 判断点击的是否是四条边
     DirectionRect rect = directionPointToDirectionRect(_directionPoint, 30, 25);
     if (CGRectContainsPoint(rect.topRect, touchPoint)) {
         _zoomingDirection = Top;
@@ -94,18 +96,17 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
             _zooming = YES;
             // 记录所点的角
             _zoomingIndex = i;
-            _touchedPoint = touchPoint;
+//            _touchedPoint = touchPoint;
             
             return YES;
         }
     }
     if (CGRectContainsPoint(self.pictureFrame, touchPoint)) {
         // 拖动模式
-        _touchedPoint = touchPoint;
+//        _touchedPoint = touchPoint;
         return YES;
-    } else {
-        return NO;
     }
+    return NO;
 }
 
 - (BOOL)continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
@@ -125,62 +126,88 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
         if (touchPoint.y > CGRectGetMaxY(self.bounds)) {
             touchPoint.y = CGRectGetMaxY(self.bounds);
         }
+        
         // 四条边缩放
+        CGFloat offsetX = touchPoint.x - _touchedPoint.x;
+        CGFloat offsetY = touchPoint.y - _touchedPoint.y;
         CGRect preFrame = self.pictureFrame;
+        
         if (_zoomingDirection == Top) {
-            self.pictureFrame = CGRectMake(preFrame.origin.x, touchPoint.y, preFrame.size.width, preFrame.origin.y-touchPoint.y+preFrame.size.height);
+            if (preFrame.size.height-offsetY <= self.minHeight) {
+                offsetY = preFrame.size.height - self.minHeight;
+            }
+            self.pictureFrame = CGRectMake(preFrame.origin.x, preFrame.origin.y+offsetY, preFrame.size.width, preFrame.size.height-offsetY);
             [self setNeedsDisplay];
+            _touchedPoint = touchPoint;
             return YES;
         } else if (_zoomingDirection == Bottom) {
-            self.pictureFrame = CGRectMake(preFrame.origin.x, preFrame.origin.y, preFrame.size.width, preFrame.size.height-(preFrame.origin.y+preFrame.size.height-touchPoint.y));
+            if (preFrame.size.height+offsetY <= self.minHeight) {
+                offsetY = self.minHeight - preFrame.size.height;
+            }
+            self.pictureFrame = CGRectMake(preFrame.origin.x, preFrame.origin.y, preFrame.size.width, preFrame.size.height+offsetY);
             [self setNeedsDisplay];
+            _touchedPoint = touchPoint;
             return YES;
         } else if (_zoomingDirection == Left) {
-            self.pictureFrame = CGRectMake(touchPoint.x, preFrame.origin.y, preFrame.origin.x-touchPoint.x+preFrame.size.width, preFrame.size.height);
+            if (preFrame.size.width-offsetX <= self.minWidth) {
+                offsetX = preFrame.size.width - self.minWidth;
+            }
+            self.pictureFrame = CGRectMake(preFrame.origin.x+offsetX, preFrame.origin.y, preFrame.size.width-offsetX, preFrame.size.height);
             [self setNeedsDisplay];
+            _touchedPoint = touchPoint;
             return YES;
         } else if (_zoomingDirection == Right) {
-            self.pictureFrame = CGRectMake(preFrame.origin.x, preFrame.origin.y, preFrame.size.width-(preFrame.origin.x+preFrame.size.width-touchPoint.x), preFrame.size.height);
+            if (preFrame.size.width+offsetX <= self.minWidth) {
+                offsetX = self.minWidth - preFrame.size.width;
+            }
+            self.pictureFrame = CGRectMake(preFrame.origin.x, preFrame.origin.y, preFrame.size.width+offsetX, preFrame.size.height);
             [self setNeedsDisplay];
+            _touchedPoint = touchPoint;
             return YES;
         }
         // 四个角缩放
-        CGPoint staticPoint;
+        CGPoint diagonalPoint;
+        CGPoint cornerPoint;
         switch (_zoomingIndex) {
             case TopLeft:
             {
-                staticPoint = _cornerPoint.bottomRightPoint;
+                diagonalPoint = _cornerPoint.bottomRightPoint;
+                cornerPoint = _cornerPoint.topLeftPoint;
             }
                 break;
             case TopRight:
             {
-                staticPoint = _cornerPoint.bottomLeftPoint;
+                diagonalPoint = _cornerPoint.bottomLeftPoint;
+                cornerPoint = _cornerPoint.topRightPoint;
             }
                 break;
             case BottomLeft:
             {
-                staticPoint = _cornerPoint.topRightPoint;
+                diagonalPoint = _cornerPoint.topRightPoint;
+                cornerPoint = _cornerPoint.bottomLeftPoint;
             }
                 break;
             case BottomRight:
             {
-                staticPoint = _cornerPoint.topLeftPoint;
+                diagonalPoint = _cornerPoint.topLeftPoint;
+                cornerPoint = _cornerPoint.bottomRightPoint;
             }
                 break;
                 
             default:
                 break;
         }
-        self.pictureFrame = [self pointToFrame:touchPoint staticPoint:staticPoint zoomingIndex:_zoomingIndex];
+//        self.pictureFrame = [self pointToFrame:touchPoint diagonalPoint:diagonalPoint zoomingIndex:_zoomingIndex];
+        self.pictureFrame = [self pointToFrame:touchPoint cornerPoint:cornerPoint diagonalPoint:diagonalPoint zoomingIndex:_zoomingIndex];
         
     } else {
         // X和Y方向上的偏移量
-        CGFloat moveX = touchPoint.x - _touchedPoint.x;
-        CGFloat moveY = touchPoint.y - _touchedPoint.y;
+        CGFloat offsetX = touchPoint.x - _touchedPoint.x;
+        CGFloat offsetY = touchPoint.y - _touchedPoint.y;
         
         CGRect rect = self.pictureFrame;
-        rect.origin.x += moveX;
-        rect.origin.y += moveY;
+        rect.origin.x += offsetX;
+        rect.origin.y += offsetY;
         
         // 让剪切框不超过self.bounds的范围
         if (rect.origin.x < 0) {
@@ -222,69 +249,154 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
     _zoomingDirection = -1;
 }
 
+- (CGRect)pointToFrame:(CGPoint)touching cornerPoint:(CGPoint)corner diagonalPoint:(CGPoint)diagonalPoint zoomingIndex:(CornerIndex)index {
+    CGFloat width,height;
+    CGPoint origin;
+    
+    CGFloat offsetX = touching.x - _touchedPoint.x;
+    CGFloat offsetY = touching.y - _touchedPoint.y;
+    
+    switch (index) {
+        case TopLeft:
+        {
+            origin = CGPointMake(corner.x + offsetX, corner.y + offsetY);
+            width = diagonalPoint.x - corner.x - offsetX;
+            height = diagonalPoint.y - corner.y - offsetY;
+            if (width < self.minWidth) {
+                width = self.minWidth;
+                origin.x = diagonalPoint.x-self.minWidth;
+            }
+            if (height < self.minHeight) {
+                height = self.minHeight;
+                origin.y = diagonalPoint.y-self.minHeight;
+            }
+        }
+            break;
+        case TopRight:
+        {
+            origin = CGPointMake(diagonalPoint.x, corner.y + offsetY);
+            width = corner.x + offsetX - diagonalPoint.x;
+            height = diagonalPoint.y - corner.y - offsetY;
+            if (width < self.minWidth) {
+                width = self.minWidth;
+                origin.x = diagonalPoint.x;
+            }
+            if (height < self.minHeight) {
+                height = self.minHeight;
+                origin.y = diagonalPoint.y - self.minHeight;
+            }
+        }
+            break;
+        case BottomLeft:
+        {
+            origin = CGPointMake(corner.x + offsetX, diagonalPoint.y);
+            width = diagonalPoint.x - corner.x - offsetX;
+            height = corner.y + offsetY - diagonalPoint.y;
+            if (width < self.minWidth) {
+                width = self.minWidth;
+                origin.x = diagonalPoint.x-self.minWidth;
+            }
+            if (height < self.minHeight) {
+                height = self.minHeight;
+                origin.y = diagonalPoint.y;
+            }
+        }
+            break;
+        case BottomRight:
+        {
+            origin = diagonalPoint;
+            width = corner.x + offsetX - diagonalPoint.x;
+            height = corner.y + offsetY - diagonalPoint.y;
+            if (width < self.minWidth) {
+                width = self.minWidth;
+                origin.x = diagonalPoint.x;
+            }
+            if (height < self.minHeight) {
+                height = self.minHeight;
+                origin.y = diagonalPoint.y;
+            }
+        }
+            break;
+            
+        default:
+        {
+            width = 0;
+            height = 0;
+        }
+            break;
+    }
+    
+    CGRect rect = CGRectMake(origin.x, origin.y, width, height);
+    
+    return rect;
+}
+
 // 根据矩形的两个对角点，计算这个矩形的frame
-- (CGRect)pointToFrame:(CGPoint)touching staticPoint:(CGPoint)staticPoint zoomingIndex:(NSInteger)index {
+- (CGRect)pointToFrame:(CGPoint)touching diagonalPoint:(CGPoint)diagonalPoint zoomingIndex:(CornerIndex)index {
     CGFloat width,height;
     CGPoint origin;
     
     switch (index) {
         case TopLeft:
         {
+            CGFloat offsetX = touching.x - _touchedPoint.x;
+            CGFloat offsetY = touching.y - _touchedPoint.y;
+            NSLog(@"%.2f  %.2f",offsetX,offsetY);
             origin = touching;
-            width = staticPoint.x-touching.x;
-            height = staticPoint.y-touching.y;
+            width = diagonalPoint.x-touching.x;
+            height = diagonalPoint.y-touching.y;
             if (width < self.minWidth) {
                 width = self.minWidth;
-                origin.x = staticPoint.x-self.minWidth;
+                origin.x = diagonalPoint.x-self.minWidth;
             }
             if (height < self.minHeight) {
                 height = self.minHeight;
-                origin.y = staticPoint.y-self.minHeight;
+                origin.y = diagonalPoint.y-self.minHeight;
             }
         }
             break;
         case TopRight:
         {
-            origin = CGPointMake(staticPoint.x, touching.y);
-            width = touching.x-staticPoint.x;
-            height = staticPoint.y-touching.y;
+            origin = CGPointMake(diagonalPoint.x, touching.y);
+            width = touching.x-diagonalPoint.x;
+            height = diagonalPoint.y-touching.y;
             if (width < self.minWidth) {
                 width = self.minWidth;
-                origin.x = staticPoint.x;
+                origin.x = diagonalPoint.x;
             }
             if (height < self.minHeight) {
                 height = self.minHeight;
-                origin.y = staticPoint.y-self.minHeight;
+                origin.y = diagonalPoint.y-self.minHeight;
             }
         }
             break;
         case BottomLeft:
         {
-            origin = CGPointMake(touching.x, staticPoint.y);
-            width = staticPoint.x-touching.x;
-            height = touching.y-staticPoint.y;
+            origin = CGPointMake(touching.x, diagonalPoint.y);
+            width = diagonalPoint.x-touching.x;
+            height = touching.y-diagonalPoint.y;
             if (width < self.minWidth) {
                 width = self.minWidth;
-                origin.x = staticPoint.x-self.minWidth;
+                origin.x = diagonalPoint.x-self.minWidth;
             }
             if (height < self.minHeight) {
                 height = self.minHeight;
-                origin.y = staticPoint.y;
+                origin.y = diagonalPoint.y;
             }
         }
             break;
         case BottomRight:
         {
-            origin = staticPoint;
-            width = touching.x-staticPoint.x;
-            height = touching.y-staticPoint.y;
+            origin = diagonalPoint;
+            width = touching.x-diagonalPoint.x;
+            height = touching.y-diagonalPoint.y;
             if (width < self.minWidth) {
                 width = self.minWidth;
-                origin.x = staticPoint.x;
+                origin.x = diagonalPoint.x;
             }
             if (height < self.minHeight) {
                 height = self.minHeight;
-                origin.y = staticPoint.y;
+                origin.y = diagonalPoint.y;
             }
         }
             break;

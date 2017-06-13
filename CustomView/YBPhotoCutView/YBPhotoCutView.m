@@ -257,6 +257,12 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
     switch (index) {
         case TopLeft:
         {
+            if (corner.x + offsetX <= 0) {
+                offsetX = - corner.x;
+            }
+            if (corner.y + offsetY <= 0) {
+                offsetY = - corner.y;
+            }
             origin = CGPointMake(corner.x + offsetX, corner.y + offsetY);
             width = diagonalPoint.x - corner.x - offsetX;
             height = diagonalPoint.y - corner.y - offsetY;
@@ -272,6 +278,12 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
             break;
         case TopRight:
         {
+            if (corner.y + offsetY <= 0) {
+                offsetY = - corner.y;
+            }
+            if (corner.x + offsetX >= self.bounds.size.width) {
+                offsetX = self.bounds.size.width - corner.x;
+            }
             origin = CGPointMake(diagonalPoint.x, corner.y + offsetY);
             width = corner.x + offsetX - diagonalPoint.x;
             height = diagonalPoint.y - corner.y - offsetY;
@@ -287,6 +299,12 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
             break;
         case BottomLeft:
         {
+            if (corner.x + offsetX <= 0) {
+                offsetX = - corner.x;
+            }
+            if (corner.y + offsetY >= self.bounds.size.height) {
+                offsetY = self.bounds.size.height - corner.y;
+            }
             origin = CGPointMake(corner.x + offsetX, diagonalPoint.y);
             width = diagonalPoint.x - corner.x - offsetX;
             height = corner.y + offsetY - diagonalPoint.y;
@@ -302,6 +320,12 @@ typedef NS_ENUM(NSUInteger, DirectionIndex) {
             break;
         case BottomRight:
         {
+            if (corner.x + offsetX >= self.bounds.size.width) {
+                offsetX = self.bounds.size.width - corner.x;
+            }
+            if (corner.y + offsetY >= self.bounds.size.height) {
+                offsetY = self.bounds.size.height - corner.y;
+            }
             origin = diagonalPoint;
             width = corner.x + offsetX - diagonalPoint.x;
             height = corner.y + offsetY - diagonalPoint.y;

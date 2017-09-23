@@ -228,7 +228,7 @@
 				TargetAttributes = {
 					04F518151D659FEC00C573AA = {
 						CreatedOnToolsVersion = 7.3.1;
-						DevelopmentTeam = P9VZ5WEEZW;
+						DevelopmentTeam = 2L992G763W;
 					};
 					04F5182E1D659FEC00C573AA = {
 						CreatedOnToolsVersion = 7.3.1;
@@ -430,7 +430,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = P9VZ5WEEZW;
+				DEVELOPMENT_TEAM = 2L992G763W;
 				INFOPLIST_FILE = CustomView/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jyb.CustomClipperView;
@@ -442,7 +442,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = P9VZ5WEEZW;
+				DEVELOPMENT_TEAM = 2L992G763W;
 				INFOPLIST_FILE = CustomView/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jyb.CustomClipperView;
